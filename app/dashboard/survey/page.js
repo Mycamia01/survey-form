@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useAuth } from "../../../components/AuthProvider";
 import SurveyService from "../../../services/SurveyService";
 import ConfirmationModal from "../../../components/ConfirmationModal";
-import SurveyPreviewModal from "../../../components/SurveyPreviewModal";
+// Removed import of SurveyPreviewModal as preview button will be removed
 
 export default function SurveyPage() {
   const { role } = useAuth();
@@ -14,8 +14,9 @@ export default function SurveyPage() {
   const [selectedSurveys, setSelectedSurveys] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [surveyToDelete, setSurveyToDelete] = useState(null);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [surveyToPreview, setSurveyToPreview] = useState(null);
+  // Removed preview modal state and handlers
+  // const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  // const [surveyToPreview, setSurveyToPreview] = useState(null);
 
   const fetchSurveys = async () => {
     setLoading(true);
@@ -84,15 +85,16 @@ export default function SurveyPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handlePreviewClick = (survey) => {
-    setSurveyToPreview(survey);
-    setIsPreviewModalOpen(true);
-  };
+  // Removed preview click handlers
+  // const handlePreviewClick = (survey) => {
+  //   setSurveyToPreview(survey);
+  //   setIsPreviewModalOpen(true);
+  // };
 
-  const handleClosePreview = () => {
-    setIsPreviewModalOpen(false);
-    setSurveyToPreview(null);
-  };
+  // const handleClosePreview = () => {
+  //   setIsPreviewModalOpen(false);
+  //   setSurveyToPreview(null);
+  // };
 
   const filteredSurveys = surveys.filter(
     (survey) =>
@@ -212,14 +214,9 @@ export default function SurveyPage() {
                     >
                       Delete
                     </button>
-                    <button
-                      onClick={() => handlePreviewClick(survey)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Preview
-                    </button>
-                    <Link href={`/dashboard/survey/${survey.id}/view`}>
-                      <button className="text-blue-600 hover:underline">View</button>
+                    {/* Preview button removed */}
+                    <Link href={`/dashboard/survey/${survey.id}/take`}>
+                      <button className="text-blue-600 hover:underline">Demo</button>
                     </Link>
                   </td>
                 </tr>
@@ -239,12 +236,6 @@ export default function SurveyPage() {
         }
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
-      />
-
-      <SurveyPreviewModal
-        isOpen={isPreviewModalOpen}
-        survey={surveyToPreview}
-        onClose={handleClosePreview}
       />
     </div>
   );

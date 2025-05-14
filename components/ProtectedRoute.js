@@ -13,6 +13,8 @@ export default function ProtectedRoute({ children }) {
     }
   }, [user, loading]);
 
+  if (loading) return null;
+
   if (!user) return null;
 
   return children;
