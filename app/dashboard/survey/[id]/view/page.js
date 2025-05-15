@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../../../../firebase/firebase-config";
 import { useAuth } from "../../../../../components/AuthProvider";
+import SurveySendSection from "../../../../../components/survey/SurveySendSection";
 
 export default function ViewSurvey() {
   const { id } = useParams();
@@ -91,6 +92,8 @@ export default function ViewSurvey() {
           </div>
         ))}
       </div>
+
+      <SurveySendSection surveyId={survey.id} surveyTitle={survey.title} />
     </div>
   );
 }

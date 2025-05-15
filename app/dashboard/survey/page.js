@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useAuth } from "../../../components/AuthProvider";
 import SurveyService from "../../../services/SurveyService";
 import ConfirmationModal from "../../../components/ConfirmationModal";
-// Removed import of SurveyPreviewModal as preview button will be removed
 
 export default function SurveyPage() {
   const { role } = useAuth();
@@ -14,9 +13,6 @@ export default function SurveyPage() {
   const [selectedSurveys, setSelectedSurveys] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [surveyToDelete, setSurveyToDelete] = useState(null);
-  // Removed preview modal state and handlers
-  // const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  // const [surveyToPreview, setSurveyToPreview] = useState(null);
 
   const fetchSurveys = async () => {
     setLoading(true);
@@ -85,17 +81,6 @@ export default function SurveyPage() {
     setIsDeleteModalOpen(true);
   };
 
-  // Removed preview click handlers
-  // const handlePreviewClick = (survey) => {
-  //   setSurveyToPreview(survey);
-  //   setIsPreviewModalOpen(true);
-  // };
-
-  // const handleClosePreview = () => {
-  //   setIsPreviewModalOpen(false);
-  //   setSurveyToPreview(null);
-  // };
-
   const filteredSurveys = surveys.filter(
     (survey) =>
       survey.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,7 +93,9 @@ export default function SurveyPage() {
         <h1 className="text-2xl font-bold">Survey Forms</h1>
         <Link href="/dashboard/survey/create" passHref>
           <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center space-x-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded shadow flex items-center justify-center
+              px-3 py-1 sm:px-4 sm:py-2 space-x-1 sm:space-x-2 text-sm sm:text-base
+              sm:flex-row flex-col sm:w-auto w-10 h-10 sm:h-auto"
             aria-label="Add Survey"
             title="Add Survey"
           >
@@ -122,7 +109,7 @@ export default function SurveyPage() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            <span>Add Survey</span>
+            <span className="hidden sm:inline">Add Survey</span>
           </button>
         </Link>
       </div>
@@ -214,7 +201,6 @@ export default function SurveyPage() {
                     >
                       Delete
                     </button>
-                    {/* Preview button removed */}
                     <Link href={`/dashboard/survey/${survey.id}/take`}>
                       <button className="text-blue-600 hover:underline">Demo</button>
                     </Link>

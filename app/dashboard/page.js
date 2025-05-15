@@ -11,6 +11,7 @@ export default function DashboardHome() {
 
   const [totalSurveys, setTotalSurveys] = useState(0);
   const [activeSurveys, setActiveSurveys] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const handleAddSurvey = () => {
     router.push("/dashboard/survey/create");
@@ -18,13 +19,28 @@ export default function DashboardHome() {
 
   useEffect(() => {
     const fetchSurveys = async () => {
-      const surveys = await SurveyService.getAllSurveys();
-      setTotalSurveys(surveys.length);
-      const activeCount = surveys.filter((survey) => survey.isActive).length;
-      setActiveSurveys(activeCount);
+      setLoading(true);
+      try {
+        const surveys = await SurveyService.getAllSurveys();
+        setTotalSurveys(surveys.length);
+        const activeCount = surveys.filter((survey) => survey.isActive).length;
+        setActiveSurveys(activeCount);
+      } catch (error) {
+        console.error("Failed to fetch surveys:", error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchSurveys();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-4 text-center">
+        <p className="text-lg font-medium">Loading surveys...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-4">
@@ -32,9 +48,11 @@ export default function DashboardHome() {
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <button
           onClick={handleAddSurvey}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center space-x-2"
           aria-label="Add Survey"
           title="Add Survey"
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded shadow flex items-center justify-center
+            px-3 py-1 sm:px-4 sm:py-2 space-x-1 sm:space-x-2 text-sm sm:text-base
+            sm:flex-row flex-col sm:w-auto w-10 h-10 sm:h-auto"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -46,7 +64,7 @@ export default function DashboardHome() {
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
-          <span>Add Survey</span>
+          <span className="hidden sm:inline">Add Survey</span>
         </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
