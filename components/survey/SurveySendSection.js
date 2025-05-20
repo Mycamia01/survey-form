@@ -1,62 +1,79 @@
+// components/SurveySendSection.js
 "use client";
 
 import { useState } from "react";
-import { sendSurveyNotification } from "../../services/sendSurveyService";
 
-export default function SurveySendSection({ surveyId, surveyTitle }) {
+export default function SurveySendSection({ surveyId }) {
   const [medium, setMedium] = useState("email");
-  const [sending, setSending] = useState(false);
-  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
 
-  const surveyLink = `${window.location.origin}/dashboard/survey/${surveyId}/take`;
+  const surveyLink = `${window.location.origin}/survey/${surveyId}`;
 
   const handleSend = async () => {
-    setSending(true);
-    setStatus("");
-    try {
-      // For demo, sending to a dummy recipient or you can extend to select recipients
-      const recipient = {
-        name: "Recipient",
-        email: "recipient@example.com",
-        phone: "+1234567890",
-      };
+    setLoading(true);
+    setResult(null);
 
-      const result = await sendSurveyNotification({ recipient, medium, surveyLink });
-      setStatus("Survey link sent successfully!");
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_SEND_API, { // Uses your endpoint: /api/sendSurvey
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: "Participant Name", // Dynamic in real usage
+          email: "participant@example.com", // Dynamic in real usage
+          medium,
+          surveyLink,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send');
+      }
+
+      setResult({ success: true, message: data.message });
     } catch (error) {
-      setStatus("Failed to send survey link.");
+      setResult({ success: false, message: error.message });
     } finally {
-      setSending(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="mt-8 p-4 border rounded max-w-md bg-white shadow">
-      <h2 className="text-lg font-semibold mb-4">Send Survey</h2>
-
+    <div className="border rounded-lg p-4 bg-white shadow-sm">
+      <h3 className="font-semibold text-lg mb-3">Send Survey Invitation</h3>
+      
       <div className="mb-4">
-        <label className="block mb-1 font-medium">Choose sending medium:</label>
+        <label className="block mb-1 text-sm">Send Via:</label>
         <select
           value={medium}
           onChange={(e) => setMedium(e.target.value)}
-          className="w-full border rounded p-2"
-          disabled={sending}
+          className="w-full p-2 border rounded"
+          disabled={loading}
         >
           <option value="email">Email</option>
-          <option value="sms">SMS</option>
-          <option value="whatsapp">WhatsApp</option>
+          <option disabled value="sms">SMS (Coming Soon)</option>
         </select>
       </div>
 
       <button
         onClick={handleSend}
-        disabled={sending}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        disabled={loading}
+        className={`px-4 py-2 rounded text-white ${
+          loading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+        }`}
       >
-        {sending ? "Sending..." : "Send Survey Link"}
+        {loading ? 'Sending...' : 'Send Invitation'}
       </button>
 
-      {status && <p className="mt-3 text-sm">{status}</p>}
+      {result && (
+        <p className={`mt-3 text-sm ${
+          result.success ? 'text-green-600' : 'text-red-600'
+        }`}>
+          {result.message}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
+import { ToastProvider } from "../components/ToastProvider";
 
 export const metadata = {
   title: "CAMIA Survey Form",
@@ -10,7 +11,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

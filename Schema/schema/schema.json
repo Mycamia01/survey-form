@@ -1,0 +1,82 @@
+{
+  "users/{userId}": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "system_user", // or "admin"
+    "createdAt": "2025-05-16T12:34:56Z"
+  },
+
+  "surveys/{surveyId}": {
+    "title": "Product Feedback",
+    "description": "Please tell us what you think",
+    "category": "Customer Feedback",
+    "createdBy": "uid123",  // userId (admin or system_user)
+    "isActive": true,
+    "createdAt": "2025-05-16T13:00:00Z",
+    "questions": [
+      {
+        "question": "What do you like about the product?",
+        "type": "text"
+      },
+      {
+        "question": "Rate our product",
+        "type": "multiple",       // supports: text, multiple, file
+        "select": "single",       // "single" or "multiple" for MCQs
+        "options": ["1", "2", "3", "4", "5"]
+      },
+      {
+        "question": "Upload a screenshot",
+        "type": "file"
+      }
+    ]
+  },
+
+  "recipients/{recipientId}": {
+    "name": "Amit Singh",
+    "email": "amit@example.com",
+    "phone": "9876543210",
+    "productName": "CAMIA Herbal Hair Oil",
+    "uploadedBy": "uid123",          // system_user UID
+    "surveySent": true,
+    "sentAt": "2025-05-16T14:00:00Z",
+    "hasResponded": true,
+    "responseId": "resp_xyz"
+  },
+
+  "responses/{responseId}": {
+    "surveyId": "survey_abc123",
+    "recipientId": "recip_xyz",
+    "answers": [
+      {
+        "question": "What do you like about the product?",
+        "type": "text",
+        "answer": "Natural ingredients and smell"
+      },
+      {
+        "question": "Rate our product",
+        "type": "multiple",
+        "answer": "5"
+      },
+      {
+        "question": "Upload a screenshot",
+        "type": "file",
+        "answer": "https://firebase-storage-link.com/file.png"
+      }
+    ],
+    "submittedAt": "2025-05-16T15:30:00Z"
+  },
+
+  "notifications/{notificationId}": {
+    "recipientId": "recip_xyz",
+    "surveyId": "survey_abc",
+    "medium": "email",               // or sms, whatsapp
+    "status": "sent",                // or failed
+    "sentAt": "2025-05-16T14:30:00Z",
+    "error": null
+  },
+
+  "categories/{categoryId}": {
+    "name": "Customer Feedback",
+    "createdBy": "uid_admin"
+  }
+}

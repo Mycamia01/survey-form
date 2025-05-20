@@ -7,11 +7,13 @@ import { db } from "../../../../firebase/firebase-config";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../../components/AuthProvider";
+import { useToast } from "../../../../components/ToastProvider";
 
 export default function CreateSurvey() {
   const [step, setStep] = useState(1);
   const { user } = useAuth();
   const router = useRouter();
+  const { addToast } = useToast();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -21,13 +23,18 @@ export default function CreateSurvey() {
   });
 
   const handleSubmit = async () => {
-    await addDoc(collection(db, "surveys"), {
-      ...formData,
-      isActive: true,
-      createdAt: serverTimestamp(),
-      createdBy: user?.uid,
-    });
-    router.push("/dashboard/survey");
+    try {
+      await addDoc(collection(db, "surveys"), {
+        ...formData,
+        isActive: true,
+        createdAt: serverTimestamp(),
+        createdBy: user?.uid,
+      });
+      addToast("Survey created successfully", "success");
+      router.push("/dashboard/survey");
+    } catch (error) {
+      addToast("Failed to create survey: " + error.message, "error");
+    }
   };
 
   return (

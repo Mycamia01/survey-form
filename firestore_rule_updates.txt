@@ -2,35 +2,65 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 👤 Users can read/write their own profile
+    // 👤 USERS COLLECTION
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
+
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      allow update, delete: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
     }
 
-    // 📋 Surveys - allow all authenticated users
+    // 📋 SURVEYS COLLECTION
     match /surveys/{surveyId} {
-      allow read, write: if request.auth != null;
+      // Admin can read all surveys
+      // system_user can only read their own
+      allow read: if request.auth != null &&
+        (request.auth.token.role == "admin" || request.auth.uid == resource.data.createdBy);
+
+      // Admin can write any survey
+      allow create, update, delete: if request.auth.token.role == "admin";
+
+      // system_user can create surveys
+      allow create: if request.auth.token.role == "system_user";
+
+      // system_user can update/delete only their own surveys
+      allow update, delete: if request.auth.token.role == "system_user" &&
+                            request.auth.uid == resource.data.createdBy;
     }
 
-    // 📥 Recipients - allow all authenticated users
+    // 📥 RECIPIENTS COLLECTION
     match /recipients/{recipientId} {
-      allow read, write: if request.auth != null;
+      // Admin and system_user can create
+      allow create: if request.auth != null &&
+        (request.auth.token.role == "admin" || request.auth.token.role == "system_user");
+
+      // Admin can access all, system_user only their own
+      allow read, update, delete: if request.auth != null &&
+        (request.auth.token.role == "admin" || request.auth.uid == resource.data.uploadedBy);
     }
 
-    // ✅ Responses - allow anyone to create, only authenticated can read
+    // ✅ RESPONSES COLLECTION
     match /responses/{responseId} {
+      // Anyone (even unauthenticated) can submit responses
       allow create: if true;
-      allow read: if request.auth != null;
+
+      // Admin and system_user can read
+      allow read: if request.auth != null &&
+        (request.auth.token.role == "admin" || request.auth.token.role == "system_user");
     }
 
-    // 📤 Notification logs - allow all authenticated users
+    // 📤 NOTIFICATIONS COLLECTION
     match /notifications/{notificationId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if request.auth.token.role == "admin";
     }
 
-    // 🏷️ Survey categories - allow all authenticated users
+    // 🏷️ CATEGORIES COLLECTION
     match /categories/{categoryId} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth.token.role == "admin";
     }
   }
 }

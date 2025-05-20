@@ -1,23 +1,48 @@
 "use client";
-import { signInWithEmailAndPassword } from "firebase/auth";
+
 import { useState } from "react";
-import { auth } from "../../firebase/firebase-config";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../../firebase/firebase-config";
 import { useRouter } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import Link from "next/link";
+import { useToast } from "../../components/ToastProvider";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { addToast } = useToast();
 
   const login = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // ✅ Check if user exists in /users and has a role
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        addToast("Access denied: user not found in database.", "error");
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      if (!userData.role) {
+        addToast("Access denied: no role assigned to this user.", "error");
+        return;
+      }
+
+      // ✅ Redirect to dashboard
+      addToast("Login successful", "success");
       router.push("/dashboard");
     } catch (err) {
-      alert("Login failed: " + err.message);
+      console.error("Login error:", err.message);
+      addToast("Login failed: " + err.message, "error");
     }
   };
 

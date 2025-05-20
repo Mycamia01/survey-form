@@ -6,7 +6,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useState, useCallback } from "react";
 
-export default function RecipientUploader() {
+export default function RecipientUploader({ onUploadComplete }) {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState("");
   const [previewData, setPreviewData] = useState([]);
@@ -90,28 +90,49 @@ export default function RecipientUploader() {
   const handleUpload = async () => {
     if (!file) return;
 
+    console.log("Preview data before upload:", previewData);
+
     try {
-      for (const user of previewData) {
+      const uploadPromises = previewData.map((user) => {
+        console.log("User object keys and values:", user);
         const id = uuidv4();
         const docRef = doc(db, "recipients", id);
 
-        // Map fields from uploaded data to expected fields
         const mappedUser = {
           id,
-          name: user["Name"] || user["name"] || user["Product Ordered"] || "",
-          email: user["Email"] || user["email"] || "",
-          phone: user["Phone Number"] || user["phone"] || "",
+          name:
+            user["Name"] ||
+            user["name"] ||
+            user["Full Name"] ||
+            "",
+          email: user["Email"] || user["email"] || user["Email Id"] || "",
+          phone:
+            user["Phone Number"] ||
+            user["phone"] ||
+            user["Phone No."] ||
+            user["Phone"] ||
+            "",
           createdAt: new Date().toISOString(),
           hasResponded: false,
         };
 
-        await setDoc(docRef, mappedUser);
-      }
+        console.log("Mapped user to save:", mappedUser);
+
+        return setDoc(docRef, mappedUser);
+      });
+
+      await Promise.all(uploadPromises);
+
       setStatus("Upload successful!");
       setIsPreviewVisible(false);
       setPreviewData([]);
       setFile(null);
+
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
     } catch (error) {
+      console.error("Error uploading recipients:", error);
       setStatus("Error uploading file");
     }
   };
@@ -135,11 +156,16 @@ export default function RecipientUploader() {
           className="absolute w-full h-full top-0 left-0 opacity-0 cursor-pointer"
           onChange={handleFileChange}
         />
-        <label htmlFor="input-file-upload" className="flex flex-col items-center justify-center gap-2">
+        <label
+          htmlFor="input-file-upload"
+          className="flex flex-col items-center justify-center gap-2"
+        >
           <span className="text-gray-600 text-lg font-medium">
             Drag and drop your CSV or Excel file here or click to select
           </span>
-          <span className="text-sm text-gray-400">(Only .csv, .xls, .xlsx files are accepted)</span>
+          <span className="text-sm text-gray-400">
+            (Only .csv, .xls, .xlsx files are accepted)
+          </span>
         </label>
         {dragActive && (
           <div
@@ -168,7 +194,10 @@ export default function RecipientUploader() {
             <thead>
               <tr>
                 {Object.keys(previewData[0]).map((key) => (
-                  <th key={key} className="border border-gray-300 px-2 py-1 bg-gray-200 text-left">
+                  <th
+                    key={key}
+                    className="border border-gray-300 px-2 py-1 bg-gray-200 text-left"
+                  >
                     {key}
                   </th>
                 ))}
@@ -176,7 +205,10 @@ export default function RecipientUploader() {
             </thead>
             <tbody>
               {previewData.map((row, idx) => (
-                <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-100"}>
+                <tr
+                  key={idx}
+                  className={idx % 2 === 0 ? "bg-white" : "bg-gray-100"}
+                >
                   {Object.values(row).map((val, i) => (
                     <td key={i} className="border border-gray-300 px-2 py-1">
                       {val}

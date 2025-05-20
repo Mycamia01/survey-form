@@ -11,11 +11,11 @@ export default function ProtectedRoute({ children }) {
     if (!loading && !user) {
       router.push("/login");
     }
-  }, [user, loading]);
+  }, [loading, user, router]);
 
-  if (loading) return null;
+  if (loading || !user) {
+    return <div>Loading...</div>;
+  }
 
-  if (!user) return null;
-
-  return children;
+  return <>{children}</>;
 }

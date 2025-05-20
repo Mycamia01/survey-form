@@ -1,65 +1,86 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebase-config";
 import { useRouter } from "next/navigation";
-import Button from "../../components/Button";
-import Input from "../../components/Input";
-import Link from "next/link";
+import { auth, db } from "../../../firebase/firebase-config";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignUpPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const router = useRouter();
+  const [error, setError] = useState("");
 
   const signUp = async () => {
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
+    setError("");
+
+    if (!email || !password || !confirmPassword) {
+      return setError("All fields are required.");
     }
+
+    if (password !== confirmPassword) {
+      return setError("Passwords do not match.");
+    }
+
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCred.user;
+
+      // ✅ Add new user to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: email.split("@")[0],
+        email: email,
+        role: "system_user",  // very important for access rules
+        createdAt: new Date().toISOString()
+      });
+
+      router.push("/dashboard"); // redirect to dashboard after signup
     } catch (err) {
-      alert("Sign up failed: " + err.message);
+      console.error("Signup error:", err);
+      setError("Sign up failed: " + err.message);
     }
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white p-8 rounded shadow">
-        <h1 className="text-2xl font-bold mb-6 text-center">Sign Up</h1>
-        <Input
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md space-y-6">
+        <h2 className="text-2xl font-bold text-center">Sign Up</h2>
+
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+        <input
+          type="email"
+          className="w-full border p-2 rounded"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mb-4"
         />
-        <Input
+
+        <input
           type="password"
+          className="w-full border p-2 rounded"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mb-4"
         />
-        <Input
+
+        <input
           type="password"
+          className="w-full border p-2 rounded"
           placeholder="Confirm Password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="mb-6"
         />
-        <Button onClick={signUp} className="w-full mb-4">
+
+        <button
+          onClick={signUp}
+          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700"
+        >
           Sign Up
-        </Button>
-        <div className="text-center text-sm">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Login
-          </Link>
-        </div>
+        </button>
       </div>
     </div>
   );
