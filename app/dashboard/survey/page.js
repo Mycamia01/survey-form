@@ -6,7 +6,7 @@ import SurveyService from "../../../services/SurveyService";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 
 export default function SurveyPage() {
-  const { role } = useAuth();
+  const { user, role } = useAuth();
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,7 +16,7 @@ export default function SurveyPage() {
 
   const fetchSurveys = async () => {
     setLoading(true);
-    const surveysData = await SurveyService.getAllSurveys();
+    const surveysData = await SurveyService.getAllSurveys(user);
     setSurveys(surveysData);
     setLoading(false);
   };

@@ -2,62 +2,72 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // 👤 USERS COLLECTION
+    // 👤 USERS
     match /users/{userId} {
+      // Read own or any if admin
       allow read: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
 
+      // Create user document only for self on first login
       allow create: if request.auth != null && request.auth.uid == userId;
 
+      // Allow update/delete by self or admin
       allow update, delete: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
     }
 
-    // 📋 SURVEYS COLLECTION
+    // 📋 SURVEYS
     match /surveys/{surveyId} {
-      // Admin can read all surveys
-      // system_user can only read their own
-      allow read: if request.auth != null &&
-        (request.auth.token.role == "admin" || request.auth.uid == resource.data.createdBy);
+      // Admin can read all, system_user can read own
+      allow read: if request.auth != null && (
+        request.auth.token.role == "admin" ||
+        request.auth.uid == resource.data.createdBy
+      );
 
-      // Admin can write any survey
-      allow create, update, delete: if request.auth.token.role == "admin";
-
-      // system_user can create surveys
-      allow create: if request.auth.token.role == "system_user";
-
-      // system_user can update/delete only their own surveys
-      allow update, delete: if request.auth.token.role == "system_user" &&
-                            request.auth.uid == resource.data.createdBy;
-    }
-
-    // 📥 RECIPIENTS COLLECTION
-    match /recipients/{recipientId} {
-      // Admin and system_user can create
+      // Create by admin or system_user
       allow create: if request.auth != null &&
-        (request.auth.token.role == "admin" || request.auth.token.role == "system_user");
+        request.auth.token.role in ["admin", "system_user"];
 
-      // Admin can access all, system_user only their own
-      allow read, update, delete: if request.auth != null &&
-        (request.auth.token.role == "admin" || request.auth.uid == resource.data.uploadedBy);
+      // Update/delete by admin, or system_user for their own surveys
+      allow update, delete: if request.auth != null && (
+        request.auth.token.role == "admin" ||
+        (request.auth.token.role == "system_user" &&
+         request.auth.uid == resource.data.createdBy)
+      );
     }
 
-    // ✅ RESPONSES COLLECTION
+    // 📥 RECIPIENTS
+    match /recipients/{recipientId} {
+      // Create allowed for admin or system_user
+      allow create: if request.auth != null &&
+        request.auth.token.role in ["admin", "system_user"];
+
+      // Read/update/delete by admin or if uploadedBy matches
+      allow read, update, delete: if request.auth != null && (
+        request.auth.token.role == "admin" ||
+        request.auth.uid == resource.data.uploadedBy
+      );
+    }
+
+    // 📝 RESPONSES
     match /responses/{responseId} {
-      // Anyone (even unauthenticated) can submit responses
+      // Allow anyone to submit a survey
       allow create: if true;
 
-      // Admin and system_user can read
-      allow read: if request.auth != null &&
-        (request.auth.token.role == "admin" || request.auth.token.role == "system_user");
+      // Admin can read all, system_user can read if they created the survey
+      allow get, list: if request.auth != null && (
+        request.auth.token.role == "admin" ||
+        request.auth.uid == resource.data.createdBy
+      );
     }
 
-    // 📤 NOTIFICATIONS COLLECTION
+    // 📤 NOTIFICATIONS
     match /notifications/{notificationId} {
-      allow read, write: if request.auth.token.role == "admin";
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == "admin";
     }
 
-    // 🏷️ CATEGORIES COLLECTION
+    // 🏷️ CATEGORIES
     match /categories/{categoryId} {
       allow read: if request.auth != null;
       allow write: if request.auth.token.role == "admin";

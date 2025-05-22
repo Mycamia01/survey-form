@@ -6,7 +6,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useState, useCallback } from "react";
 
-export default function RecipientUploader({ onUploadComplete }) {
+export default function RecipientUploader({ onUploadComplete, user }) {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState("");
   const [previewData, setPreviewData] = useState([]);
@@ -61,13 +61,6 @@ export default function RecipientUploader({ onUploadComplete }) {
     }
   };
 
-  const handleFileChange = (e) => {
-    e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  };
-
   const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -90,33 +83,35 @@ export default function RecipientUploader({ onUploadComplete }) {
   const handleUpload = async () => {
     if (!file) return;
 
-    console.log("Preview data before upload:", previewData);
+    if (!user || !user.uid) {
+      setStatus("User not authenticated. Cannot upload recipients.");
+      return;
+    }
 
     try {
-      const uploadPromises = previewData.map((user) => {
-        console.log("User object keys and values:", user);
+      const uploadPromises = previewData.map((userData) => {
         const id = uuidv4();
         const docRef = doc(db, "recipients", id);
 
         const mappedUser = {
           id,
           name:
-            user["Name"] ||
-            user["name"] ||
-            user["Full Name"] ||
+            userData["Name"] ||
+            userData["name"] ||
+            userData["Full Name"] ||
             "",
-          email: user["Email"] || user["email"] || user["Email Id"] || "",
+          email: userData["Email"] || userData["email"] || userData["Email Id"] || "",
           phone:
-            user["Phone Number"] ||
-            user["phone"] ||
-            user["Phone No."] ||
-            user["Phone"] ||
+            userData["Phone Number"] ||
+            userData["phone"] ||
+            userData["Phone No."] ||
+            userData["Phone"] ||
             "",
           createdAt: new Date().toISOString(),
           hasResponded: false,
+          uploadedBy: user.uid,
+          fileName: file.name // Added fileName field here
         };
-
-        console.log("Mapped user to save:", mappedUser);
 
         return setDoc(docRef, mappedUser);
       });
@@ -154,7 +149,12 @@ export default function RecipientUploader({ onUploadComplete }) {
           accept=".csv, .xls, .xlsx"
           id="input-file-upload"
           className="absolute w-full h-full top-0 left-0 opacity-0 cursor-pointer"
-          onChange={handleFileChange}
+          onChange={(e) => {
+            e.preventDefault();
+            if (e.target.files && e.target.files[0]) {
+              handleFile(e.target.files[0]);
+            }
+          }}
         />
         <label
           htmlFor="input-file-upload"

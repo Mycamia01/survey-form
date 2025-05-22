@@ -3,8 +3,10 @@ import { sendSurveyNotification } from "../../services/sendSurveyService";
 import { db } from "../../firebase/firebase-config";
 import { doc, updateDoc } from "firebase/firestore";
 import SurveyService from "../../services/SurveyService";
+import { useAuth } from "../../components/AuthProvider";
 
 export default function SendSurveyModal({ selectedIds, allRecipients, onClose }) {
+  const { user } = useAuth();
   const [medium, setMedium] = useState("email");
   const [surveyLink, setSurveyLink] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,14 +16,16 @@ export default function SendSurveyModal({ selectedIds, allRecipients, onClose })
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    SurveyService.getAllSurveys().then(setSurveys);
-  }, []);
+    if (user) {
+      SurveyService.getAllSurveys(user).then(setSurveys);
+    }
+  }, [user]);
 
   const handleSend = async () => {
     setError("");
     setSuccess("");
-    if (!process.env.NEXT_PUBLIC_SEND_API) {
-      setError("Notification API URL is not configured. Please set NEXT_PUBLIC_SEND_API.");
+    if (!process.env.NEXT_PUBLIC_SEND_API && !process.env.NEXT_PUBLIC_TWILIO_NOTIFY_API) {
+      setError("Notification API URL is not configured. Please set NEXT_PUBLIC_SEND_API or NEXT_PUBLIC_TWILIO_NOTIFY_API.");
       return;
     }
     if (!selectedSurvey && !surveyLink) {
@@ -32,8 +36,12 @@ export default function SendSurveyModal({ selectedIds, allRecipients, onClose })
     const targets = allRecipients.filter(r => selectedIds.includes(r.id));
 
     try {
+      const linkToSend = selectedSurvey
+        ? `https://yourdomain.com/survey/${selectedSurvey}`
+        : surveyLink;
+
       for (const r of targets) {
-        await sendSurveyNotification({ recipient: r, medium, surveyLink: selectedSurvey || surveyLink });
+        await sendSurveyNotification({ recipient: r, medium, surveyLink: linkToSend });
         await updateDoc(doc(db, "recipients", r.id), {
           surveySent: true,
           sentAt: new Date().toISOString()
@@ -64,7 +72,7 @@ export default function SendSurveyModal({ selectedIds, allRecipients, onClose })
         >
           <option value="">-- Select a survey --</option>
           {surveys.map((survey) => (
-            <option key={survey.id} value={survey.link}>
+            <option key={survey.id} value={survey.id}>
               {survey.title}
             </option>
           ))}

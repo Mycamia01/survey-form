@@ -1,13 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getDashboardStats } from "../../services/analyticsService";
+import { useAuth } from "../AuthProvider";
 
 export default function DashboardStats() {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    getDashboardStats().then(setStats);
-  }, []);
+    if (user) {
+      getDashboardStats(user).then(setStats);
+    }
+  }, [user]);
 
   if (!stats) return <p>Loading stats...</p>;
 

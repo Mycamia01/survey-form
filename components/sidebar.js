@@ -7,6 +7,7 @@ const navItems = [
   { name: "Dashboard", path: "/dashboard" },
   { name: "Survey Forms", path: "/dashboard/survey" },
   { name: "Recipients", path: "/dashboard/recipients" },
+  { name: "Responses", path: "/dashboard/responses" },
   { name: "Settings", path: "/dashboard/settings" },
 ];
 
