@@ -22,7 +22,7 @@ export default function RecipientPage() {
 
   // Group recipients by fileName
   const filesMap = recipients.reduce((acc, recipient) => {
-    const file = recipient.fileName || "Unknown File";
+    const file = recipient.fileName || "1st Batch";
     if (!acc[file]) {
       acc[file] = [];
     }

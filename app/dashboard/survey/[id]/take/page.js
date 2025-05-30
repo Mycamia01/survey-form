@@ -87,7 +87,7 @@ export default function TakeSurvey() {
         <p className="mb-4">{question.question}</p>
 
         {question.type === "option" && question.options && (
-          <ul className="list-disc list-inside ml-4 mb-4">
+          <ul className="list-none list-inside ml-4 mb-4">
             {question.options.map((opt, i) => (
               <li key={i}>
                 <label>
